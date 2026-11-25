@@ -104,6 +104,13 @@ When the Mac shows "Connected", move the mouse off the PC screen's edge.
 > `config.json` holds your passphrase. It's in `.gitignore` so it never gets committed.
 > Don't share it.
 
+**Run by Ura (optional).** If the PC's `config.json` says `"passphrase_source": "ura-vault"`
+instead of holding a `passphrase`, the PC server reads the passphrase from the
+`URA_SECRET_PIKMAK_PASSPHRASE` environment variable, which the Ura Core sets from its Vault. Ura
+then starts the server at logon and restarts it if it stops (`ura start|stop|restart pikmak`),
+and `start_pc.bat` refuses to run rather than invent a new passphrase. The Mac's `config.json`
+keeps the passphrase itself.
+
 ## Controls
 
 | What | How |

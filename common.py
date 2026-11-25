@@ -57,6 +57,12 @@ DEFAULT_CONFIG = {
 }
 
 
+# When Ura runs PIKMAK, the passphrase comes from the Ura Vault in this environment variable
+# and config.json holds "passphrase_source": "ura-vault" instead of the passphrase itself.
+VAULT_ENV = "URA_SECRET_PIKMAK_PASSPHRASE"
+VAULT_SOURCE = "ura-vault"
+
+
 def load_config(create_if_missing=False):
     cfg = dict(DEFAULT_CONFIG)
     if os.path.exists(CONFIG_PATH):
@@ -67,6 +73,15 @@ def load_config(create_if_missing=False):
             f"Missing {CONFIG_PATH}. Run the PC server once to generate it, "
             "then copy config.json next to mac_client.py on the Mac."
         )
+    if cfg.get("passphrase_source") == VAULT_SOURCE:
+        cfg["passphrase"] = os.environ.get(VAULT_ENV, "")
+        if not cfg["passphrase"]:
+            # Never generate a new one here: that would silently break pairing with the Mac.
+            raise SystemExit(
+                f"The passphrase is kept in the Ura Vault, but {VAULT_ENV} isn't set. "
+                "Start PIKMAK through Ura (ura start pikmak)."
+            )
+        return cfg
     if not cfg.get("passphrase"):
         if not create_if_missing:
             raise SystemExit("config.json has an empty passphrase. Copy it from the PC.")
@@ -79,6 +94,8 @@ def load_config(create_if_missing=False):
 
 
 def save_config(cfg):
+    if cfg.get("passphrase_source") == VAULT_SOURCE:
+        cfg = {k: v for k, v in cfg.items() if k != "passphrase"}  # never write it back to disk
     with open(CONFIG_PATH, "w", encoding="utf-8") as f:
         json.dump(cfg, f, indent=2)
         f.write("\n")
